@@ -21,22 +21,23 @@
     <header class="app-header">
         <div class="brand-title">
             <i class="bi bi-file-earmark-pdf-fill"></i>
-            <span>Micro Copy Maker</span>
-            <span class="badge bg-indigo-subtle text-indigo" style="font-size: 0.65rem; border: 1px solid var(--accent-indigo);">v1.0 PRO</span>
+            <span class="d-none d-sm-inline">Micro Copy Maker</span>
+            <span class="d-inline d-sm-none">Micro Copy</span>
+            <span class="badge bg-indigo-subtle text-indigo d-none d-md-inline-block" style="font-size: 0.65rem; border: 1px solid var(--accent-indigo);">v1.0 PRO</span>
         </div>
         
         <div class="d-flex align-items-center gap-3">
             <!-- Active Project Indicator -->
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 d-none d-md-flex">
                 <span class="form-label-custom mb-0 text-white opacity-75">Active:</span>
                 <span id="active-project-name" class="badge bg-secondary font-monospace" style="font-size: 0.85rem;">New Project</span>
             </div>
             
-            <button id="btn-update-preview" class="btn btn-glass btn-sm">
-                <i class="bi bi-arrow-clockwise me-1"></i> Update Preview
+            <button id="btn-update-preview" class="btn btn-glass btn-sm" title="Update Preview">
+                <i class="bi bi-arrow-clockwise"></i><span class="d-none d-sm-inline ms-1">Update Preview</span>
             </button>
-            <button id="btn-download-pdf" class="btn btn-premium btn-sm">
-                <i class="bi bi-download me-1"></i> Download PDF
+            <button id="btn-download-pdf" class="btn btn-premium btn-sm" title="Download PDF">
+                <i class="bi bi-download"></i><span class="d-none d-sm-inline ms-1">Download PDF</span>
             </button>
         </div>
     </header>
@@ -454,6 +455,22 @@
             </section>
             
         </main>
+    </div>
+
+    <!-- Mobile Bottom Tab Bar -->
+    <div class="mobile-tabs-bar d-lg-none">
+        <button class="mobile-tab-btn active" data-tab="sidebar" title="Settings">
+            <i class="bi bi-sliders"></i>
+            <span>Settings</span>
+        </button>
+        <button class="mobile-tab-btn" data-tab="editor" title="Editor">
+            <i class="bi bi-pencil-square"></i>
+            <span>Editor</span>
+        </button>
+        <button class="mobile-tab-btn" data-tab="preview" title="Preview">
+            <i class="bi bi-eye"></i>
+            <span>Preview</span>
+        </button>
     </div>
 
     <!-- Bootstrap 5 Bundle JS -->
@@ -900,6 +917,37 @@
                     }
                 })
                 .catch(err => alert('Delete failed: ' + err.message));
+            });
+
+            // Mobile Tabs navigation logic
+            const tabButtons = document.querySelectorAll('.mobile-tab-btn');
+            const mainContainer = document.querySelector('.main-container');
+
+            // Default state
+            mainContainer.classList.add('show-sidebar');
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+
+                    // Remove show-* classes from main-container
+                    mainContainer.classList.remove('show-sidebar', 'show-editor', 'show-preview');
+                    
+                    // Add specific show class
+                    const tab = this.getAttribute('data-tab');
+                    if (tab === 'sidebar') {
+                        mainContainer.classList.add('show-sidebar');
+                    } else if (tab === 'editor') {
+                        mainContainer.classList.add('show-editor');
+                    } else if (tab === 'preview') {
+                        mainContainer.classList.add('show-preview');
+                        // Update preview when switching to preview tab to ensure it's up to date
+                        updatePreview();
+                    }
+                });
             });
 
             // Trigger Initial Preview compilation

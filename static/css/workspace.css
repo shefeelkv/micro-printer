@@ -261,23 +261,39 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: var(--shadow-soft);
 }
 
-/* Custom CKEditor styling overrides to match dark theme border */
-.ck-editor {
+/* Quill Editor Custom styling for scrolling and layout */
+#editor {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    flex: 1;
-    height: 100%;
+    overflow: hidden;
+    border: none !important;
 }
 
-.ck-editor__main {
+.ql-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: inherit !important;
+    font-size: 0.95rem !important;
+    border: none !important;
+}
+
+.ql-editor {
     flex: 1;
     overflow-y: auto;
-    height: calc(100% - 40px);
+    padding: 1rem !important;
+    height: auto !important;
 }
 
-.ck-content {
-    min-height: 100% !important;
-    height: 100% !important;
+.ql-toolbar {
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: #f8fafc;
+    padding: 8px 12px !important;
 }
 
 /* Preview Frame style */
@@ -352,21 +368,102 @@ h1, h2, h3, h4, h5, h6 {
     gap: 6px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 992px) {
+/* Responsive Adjustments & Mobile Tabbed View */
+@media (max-width: 991px) {
+    body {
+        overflow: hidden;
+    }
+
     .main-container {
         flex-direction: column;
-        overflow-y: auto;
+        height: calc(100vh - var(--header-height) - 56px);
+        overflow: hidden;
+        position: relative;
     }
-    .sidebar {
-        width: 100%;
-        height: auto;
+
+    /* Hide all panels on mobile by default */
+    .sidebar,
+    .workspace,
+    .editor-pane,
+    .preview-pane {
+        display: none !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        height: 100% !important;
+        flex: 1 !important;
+        border-right: none !important;
     }
-    .workspace {
-        flex-direction: column;
-        height: auto;
+
+    /* Toggle visibility based on the active tab state */
+    .main-container.show-sidebar .sidebar {
+        display: flex !important;
     }
+
+    .main-container.show-editor .workspace,
+    .main-container.show-editor .editor-pane {
+        display: flex !important;
+    }
+
+    .main-container.show-preview .workspace,
+    .main-container.show-preview .preview-pane {
+        display: flex !important;
+    }
+
+    /* Adjust padding/margins inside panes for smaller viewports */
     .editor-pane, .preview-pane {
-        height: 600px;
+        padding: 0.75rem !important;
     }
+}
+
+/* Mobile Bottom Navigation Bar */
+.mobile-tabs-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: linear-gradient(180deg, #131a2b 0%, #0b0f19 100%);
+    border-top: 1px solid var(--border-glass);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1040;
+    padding: 0 0.25rem;
+    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.4);
+}
+
+.mobile-tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 500;
+    gap: 3px;
+    height: 100%;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-tab-btn i {
+    font-size: 1.25rem;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.mobile-tab-btn.active {
+    color: var(--accent-indigo);
+}
+
+.mobile-tab-btn.active i {
+    transform: translateY(-3px);
+    color: var(--accent-indigo);
+    filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.6));
+}
+
+.mobile-tab-btn:hover {
+    color: var(--text-glow);
 }
