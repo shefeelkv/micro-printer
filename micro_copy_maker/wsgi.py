@@ -14,3 +14,6 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'micro_copy_maker.settings')
 
 application = get_wsgi_application()
+
+app = application
+
