@@ -155,13 +155,96 @@ def draw_background_and_watermark(canvas, doc):
         canvas.drawCentredString(0, 0, watermark_text)
         canvas.restoreState()
 
+def generate_pdf_reportlab(html_content, pdf_settings, output_stream):
+    """Fallback PDF generator using ReportLab's flowable parser and canvas layout."""
+    # Retrieve page size
+    paper_size_str = pdf_settings.get('paper_size', 'A4').upper()
+    is_landscape = pdf_settings.get('orientation', 'portrait').lower() == 'landscape'
+    
+    pagesize = A4
+    if paper_size_str == 'LETTER':
+        pagesize = letter
+    elif paper_size_str == 'A5':
+        pagesize = A5
+        
+    if is_landscape:
+        pagesize = landscape(pagesize)
+        
+    # Margins
+    margin_left = safe_float(pdf_settings.get('margin_left'), 36)
+    margin_right = safe_float(pdf_settings.get('margin_right'), 36)
+    margin_top = safe_float(pdf_settings.get('margin_top'), 36)
+    margin_bottom = safe_float(pdf_settings.get('margin_bottom'), 36)
+    
+    # Calculate column width
+    page_width, page_height = pagesize
+    columns = safe_int(pdf_settings.get('columns'), 1)
+    columns = max(1, min(6, columns))
+    column_spacing = safe_float(pdf_settings.get('column_spacing'), 12)
+    
+    usable_width = page_width - margin_left - margin_right
+    column_width = (usable_width - (column_spacing * (columns - 1))) / columns
+    
+    # Parse HTML to Flowables
+    parser = HTMLToFlowablesParser(html_content, pdf_settings, column_width)
+    story = parser.parse()
+    
+    # Build Document Template
+    doc = BaseDocTemplate(output_stream, pagesize=pagesize,
+                          leftMargin=margin_left, rightMargin=margin_right,
+                          topMargin=margin_top, bottomMargin=margin_bottom)
+    
+    # Frames for columns
+    frames = []
+    for i in range(columns):
+        frame_x = margin_left + i * (column_width + column_spacing)
+        frame_y = margin_bottom
+        frame_w = column_width
+        frame_h = page_height - margin_top - margin_bottom
+        frames.append(Frame(frame_x, frame_y, frame_w, frame_h, id=f'col_{i}', 
+                            leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0))
+        
+    template = PageTemplate(id='multi_col', frames=frames, 
+                            onPage=draw_background_and_watermark)
+    doc.addPageTemplates([template])
+    
+    # Create custom Canvas and set settings
+    class ConfiguredNumberedCanvas(NumberedCanvas):
+        pass
+    ConfiguredNumberedCanvas.pdf_settings = pdf_settings
+    
+    doc.build(story, canvasmaker=ConfiguredNumberedCanvas)
+
 def generate_pdf(html_content, pdf_settings, output_stream):
     """
-    Renders HTML content to PDF using headless Chrome.
-    Fully supports complex text layout (CTL) and OpenType shaping for Malayalam Unicode.
+    Renders HTML content to PDF.
+    Attempts to use headless Chrome first, falling back to ReportLab
+    if Chrome is not installed or when running in a serverless environment (e.g. Vercel).
     """
     # Pre-register/download fallback fonts to media/fonts/ cached directory
     prepare_fallback_fonts()
+
+    # Determine if we should use ReportLab fallback (e.g. if Vercel or Chrome not found)
+    use_reportlab = False
+    chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    
+    if os.environ.get('VERCEL') == '1' or 'VERCEL' in os.environ:
+        use_reportlab = True
+    elif not os.path.exists(chrome_path):
+        # Check standard Linux paths for chromium/chrome
+        linux_chrome = "/usr/bin/google-chrome"
+        linux_chromium = "/usr/bin/chromium-browser"
+        if os.path.exists(linux_chrome):
+            chrome_path = linux_chrome
+        elif os.path.exists(linux_chromium):
+            chrome_path = linux_chromium
+        else:
+            use_reportlab = True
+
+    if use_reportlab:
+        generate_pdf_reportlab(html_content, pdf_settings, output_stream)
+        return
+
 
     # 1. Map settings to CSS variables/rules
     paper_size = pdf_settings.get('paper_size', 'A4').upper()
@@ -350,7 +433,6 @@ h1, h2, h3, h4, h5, h6, table, img, tr, td, th {{
         os.close(temp_pdf_fd) # Close descriptor so Chrome can write to it
         
         # 5. Build Headless Chrome print command
-        chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
         cmd = [
             chrome_path,
             "--headless",
