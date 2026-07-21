@@ -1,0 +1,372 @@
+/* Micro Copy Maker - Premium CSS Design System */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-primary: #0b0f19;
+    --bg-secondary: #131a2b;
+    --bg-glass: rgba(19, 26, 43, 0.7);
+    --border-glass: rgba(255, 255, 255, 0.08);
+    --border-active: rgba(99, 102, 241, 0.5);
+    
+    --accent-indigo: #6366f1;
+    --accent-violet: #8b5cf6;
+    --accent-pink: #ec4899;
+    
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --text-glow: #e0e7ff;
+    
+    --sidebar-width: 380px;
+    --header-height: 64px;
+    --font-ui: 'Plus Jakarta Sans', sans-serif;
+    --font-heading: 'Outfit', sans-serif;
+    
+    --shadow-neon: 0 0 20px rgba(99, 102, 241, 0.25);
+    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+}
+
+/* App Layout structure */
+.app-header {
+    height: var(--header-height);
+    background: linear-gradient(90deg, #111827 0%, #1f2937 100%);
+    border-bottom: 1px solid var(--border-glass);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+}
+
+.brand-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.main-container {
+    margin-top: var(--header-height);
+    height: calc(100vh - var(--header-height));
+    display: flex;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.sidebar-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+}
+
+.sidebar-scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar-scrollable::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-scrollable::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+.sidebar-scrollable::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Workspace Panels (Editor and Preview Split) */
+.workspace {
+    flex: 1;
+    display: flex;
+    height: 100%;
+    background-color: var(--bg-primary);
+}
+
+.editor-pane {
+    flex: 1;
+    border-right: 1px solid var(--border-glass);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.25rem;
+    position: relative;
+}
+
+.preview-pane {
+    flex: 1.1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1.25rem;
+    background-color: #1e293b;
+}
+
+/* Glassmorphism Cards & Accordions */
+.glass-card {
+    background: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.accordion-item-glass {
+    background: transparent !important;
+    border: 1px solid var(--border-glass) !important;
+    border-radius: 8px !important;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+}
+
+.accordion-button-glass {
+    background: var(--bg-secondary) !important;
+    color: var(--text-main) !important;
+    font-family: var(--font-heading) !important;
+    font-weight: 500 !important;
+    padding: 0.85rem 1rem !important;
+    box-shadow: none !important;
+}
+
+.accordion-button-glass:not(.collapsed) {
+    border-bottom: 1px solid var(--border-glass);
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%) !important;
+}
+
+.accordion-button-glass::after {
+    filter: invert(1);
+}
+
+.accordion-body-glass {
+    background-color: rgba(11, 15, 25, 0.4);
+    padding: 1rem !important;
+    color: var(--text-muted);
+}
+
+/* Form Styles */
+.form-label-custom {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+}
+
+.form-control-glass, .form-select-glass {
+    background-color: rgba(11, 15, 25, 0.6) !important;
+    border: 1px solid var(--border-glass) !important;
+    color: var(--text-main) !important;
+    font-size: 0.85rem !important;
+    border-radius: 6px !important;
+    padding: 0.45rem 0.75rem !important;
+    transition: all 0.25s ease !important;
+}
+
+.form-control-glass:focus, .form-select-glass:focus {
+    border-color: var(--accent-indigo) !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+    outline: none !important;
+}
+
+.form-check-input-custom {
+    background-color: rgba(11, 15, 25, 0.6) !important;
+    border: 1px solid var(--border-glass) !important;
+}
+
+.form-check-input-custom:checked {
+    background-color: var(--accent-indigo) !important;
+    border-color: var(--accent-indigo) !important;
+}
+
+/* Premium Buttons */
+.btn-premium {
+    background: linear-gradient(135deg, var(--accent-indigo) 0%, var(--accent-violet) 100%);
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    letter-spacing: -0.2px;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-neon);
+}
+
+.btn-premium:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.45);
+    color: white;
+}
+
+.btn-premium:active {
+    transform: translateY(0);
+}
+
+.btn-glass {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass);
+    color: var(--text-main);
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.btn-glass:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+}
+
+/* Editor Interface adjustments */
+.editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    color: #333;
+    box-shadow: var(--shadow-soft);
+}
+
+/* Custom CKEditor styling overrides to match dark theme border */
+.ck-editor {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+}
+
+.ck-editor__main {
+    flex: 1;
+    overflow-y: auto;
+    height: calc(100% - 40px);
+}
+
+.ck-content {
+    min-height: 100% !important;
+    height: 100% !important;
+}
+
+/* Preview Frame style */
+.preview-container {
+    flex: 1;
+    background-color: #334155;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-soft);
+}
+
+.preview-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background-color: #334155;
+}
+
+/* Load Overlay styling */
+.preview-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.preview-loading.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.spinner-glow {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid rgba(99, 102, 241, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--accent-indigo);
+    animation: spin 1s linear infinite;
+    filter: drop-shadow(0 0 8px var(--accent-indigo));
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Top bar pane actions */
+.pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.pane-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-glow);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .main-container {
+        flex-direction: column;
+        overflow-y: auto;
+    }
+    .sidebar {
+        width: 100%;
+        height: auto;
+    }
+    .workspace {
+        flex-direction: column;
+        height: auto;
+    }
+    .editor-pane, .preview-pane {
+        height: 600px;
+    }
+}

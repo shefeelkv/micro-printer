@@ -1,0 +1,951 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro Copy Maker - Professional Multi-Column PDF Generator</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Quill.js 2.0 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <!-- Custom Workspace CSS -->
+    <link href="{% static 'css/workspace.css' %}" rel="stylesheet">
+</head>
+<body>
+
+    <!-- App Header -->
+    <header class="app-header">
+        <div class="brand-title">
+            <i class="bi bi-file-earmark-pdf-fill"></i>
+            <span>Micro Copy Maker</span>
+            <span class="badge bg-indigo-subtle text-indigo" style="font-size: 0.65rem; border: 1px solid var(--accent-indigo);">v1.0 PRO</span>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <!-- Active Project Indicator -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="form-label-custom mb-0 text-white opacity-75">Active:</span>
+                <span id="active-project-name" class="badge bg-secondary font-monospace" style="font-size: 0.85rem;">New Project</span>
+            </div>
+            
+            <button id="btn-update-preview" class="btn btn-glass btn-sm">
+                <i class="bi bi-arrow-clockwise me-1"></i> Update Preview
+            </button>
+            <button id="btn-download-pdf" class="btn btn-premium btn-sm">
+                <i class="bi bi-download me-1"></i> Download PDF
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-scrollable">
+                
+                <!-- Project Management Section -->
+                <div class="glass-card mb-3">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label-custom">Project Name</label>
+                            <input type="text" id="project-name-input" class="form-control form-control-glass form-control-sm" value="My Study Notes">
+                        </div>
+                        <div class="col-6">
+                            <button id="btn-save-project" class="btn btn-premium btn-sm w-100" style="font-size: 0.8rem;">
+                                <i class="bi bi-cloud-arrow-up-fill me-1"></i> Save
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button id="btn-delete-project" class="btn btn-outline-danger btn-sm w-100" style="font-size: 0.8rem;" disabled>
+                                <i class="bi bi-trash-fill"></i> Delete
+                            </button>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <label class="form-label-custom">Load Saved Project</label>
+                            <select id="select-project" class="form-select form-select-glass form-select-sm">
+                                <option value="">-- Choose saved project --</option>
+                                {% for p in saved_projects %}
+                                    <option value="{{ p.id }}">{{ p.name }} ({{ p.updated_at|date:"Y-m-d" }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Accordion -->
+                <div class="accordion" id="settings-accordion">
+                    
+                    <!-- 1. Layout & Column Settings -->
+                    <div class="accordion-item accordion-item-glass">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button accordion-button-glass" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-layout">
+                                <i class="bi bi-grid-3x3-gap me-2"></i> Page Layout & Columns
+                            </button>
+                        </h2>
+                        <div id="collapse-layout" class="accordion-collapse collapse show" data-bs-parent="#settings-accordion">
+                            <div class="accordion-body accordion-body-glass">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Paper Size</label>
+                                        <select id="paper-size" class="form-select form-select-glass">
+                                            <option value="A4" selected>A4</option>
+                                            <option value="Letter">Letter</option>
+                                            <option value="A5">A5</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Orientation</label>
+                                        <select id="orientation" class="form-select form-select-glass">
+                                            <option value="portrait" selected>Portrait</option>
+                                            <option value="landscape">Landscape</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Columns</label>
+                                        <select id="columns-count" class="form-select form-select-glass">
+                                            <option value="2">2 Columns</option>
+                                            <option value="3" selected>3 Columns</option>
+                                            <option value="4">4 Columns</option>
+                                            <option value="5">5 Columns</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Gutter Spacing</label>
+                                        <input type="number" id="column-spacing" class="form-control form-control-glass" value="12" min="4" max="36" step="1">
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <label class="form-label-custom">Margins (points)</label>
+                                        <div class="row g-1">
+                                            <div class="col-3">
+                                                <input type="number" id="margin-top" class="form-control form-control-glass text-center p-1" value="36" title="Top Margin">
+                                                <small class="d-block text-center text-muted" style="font-size: 0.65rem;">Top</small>
+                                            </div>
+                                            <div class="col-3">
+                                                <input type="number" id="margin-bottom" class="form-control form-control-glass text-center p-1" value="36" title="Bottom Margin">
+                                                <small class="d-block text-center text-muted" style="font-size: 0.65rem;">Bottom</small>
+                                            </div>
+                                            <div class="col-3">
+                                                <input type="number" id="margin-left" class="form-control form-control-glass text-center p-1" value="36" title="Left Margin">
+                                                <small class="d-block text-center text-muted" style="font-size: 0.65rem;">Left</small>
+                                            </div>
+                                            <div class="col-3">
+                                                <input type="number" id="margin-right" class="form-control form-control-glass text-center p-1" value="36" title="Right Margin">
+                                                <small class="d-block text-center text-muted" style="font-size: 0.65rem;">Right</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input form-check-input-custom" type="checkbox" id="show-page-border">
+                                            <label class="form-check-label text-white-50" style="font-size: 0.8rem;" for="show-page-border">Draw Page Border</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12" id="page-border-color-wrapper" style="display: none;">
+                                        <label class="form-label-custom">Border Color</label>
+                                        <input type="color" id="page-border-color" class="form-control form-control-glass form-control-color w-100" value="#000000">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Typography -->
+                    <div class="accordion-item accordion-item-glass">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button accordion-button-glass collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-typography">
+                                <i class="bi bi-fonts me-2"></i> Typography & Fonts
+                            </button>
+                        </h2>
+                        <div id="collapse-typography" class="accordion-collapse collapse" data-bs-parent="#settings-accordion">
+                            <div class="accordion-body accordion-body-glass">
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <label class="form-label-custom">Font Family</label>
+                                        <select id="font-family" class="form-select form-select-glass">
+                                            <optgroup label="Google Fonts (Dynamic)">
+                                                <option value="Roboto" selected>Roboto</option>
+                                                <option value="Poppins">Poppins</option>
+                                                <option value="Inter">Inter</option>
+                                                <option value="Open Sans">Open Sans</option>
+                                                <option value="Lato">Lato</option>
+                                                <option value="Montserrat">Montserrat</option>
+                                                <option value="Merriweather">Merriweather</option>
+                                                <option value="Noto Sans">Noto Sans</option>
+                                                <option value="Noto Serif">Noto Serif</option>
+                                                <option value="Noto Sans Malayalam">Noto Sans Malayalam</option>
+                                                <option value="Meera">Meera</option>
+                                                <option value="Manjari">Manjari</option>
+                                                <option value="Chilanka">Chilanka</option>
+                                            </optgroup>
+                                            <optgroup label="Standard Fonts">
+                                                <option value="Arial">Arial (Helvetica)</option>
+                                                <option value="Times New Roman">Times New Roman</option>
+                                                <option value="Georgia">Georgia</option>
+                                                <option value="Courier New">Courier New</option>
+                                            </optgroup>
+                                            <optgroup id="optgroup-custom-fonts" label="Custom Uploaded">
+                                                {% for font in custom_fonts %}
+                                                    <option value="{{ font.name }}">{{ font.name }}</option>
+                                                {% endfor %}
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Font Size (pt)</label>
+                                        <input type="number" id="font-size" class="form-control form-control-glass" value="8" min="5" max="18" step="0.5">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Line Height</label>
+                                        <input type="number" id="line-height" class="form-control form-control-glass" value="1.15" min="0.8" max="2.5" step="0.05">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Paragraph Spacing</label>
+                                        <input type="number" id="paragraph-spacing" class="form-control form-control-glass" value="4" min="0" max="24">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Text Alignment</label>
+                                        <select id="text-align" class="form-select form-select-glass">
+                                            <option value="justify" selected>Justified</option>
+                                            <option value="left">Left</option>
+                                            <option value="center">Center</option>
+                                            <option value="right">Right</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <label class="form-label-custom">Text Color</label>
+                                        <input type="color" id="text-color" class="form-control form-control-glass form-control-color w-100" value="#111827">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label-custom">Page Background Color</label>
+                                        <input type="color" id="bg-color" class="form-control form-control-glass form-control-color w-100" value="#ffffff">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Headings Styling -->
+                    <div class="accordion-item accordion-item-glass">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button accordion-button-glass collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-headings">
+                                <i class="bi bi-type-h1 me-2"></i> Heading Decoration
+                            </button>
+                        </h2>
+                        <div id="collapse-headings" class="accordion-collapse collapse" data-bs-parent="#settings-accordion">
+                            <div class="accordion-body accordion-body-glass">
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <label class="form-label-custom">Heading Font</label>
+                                        <select id="heading-font" class="form-select form-select-glass">
+                                            <option value="Roboto" selected>Same as Body Font</option>
+                                            <option value="Poppins">Poppins</option>
+                                            <option value="Inter">Inter</option>
+                                            <option value="Montserrat">Montserrat</option>
+                                            <option value="Merriweather">Merriweather</option>
+                                            <option value="Noto Serif">Noto Serif</option>
+                                            <option value="Noto Sans Malayalam">Noto Sans Malayalam</option>
+                                            <option value="Meera">Meera</option>
+                                            <option value="Manjari">Manjari</option>
+                                            <option value="Chilanka">Chilanka</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Base Size (pt)</label>
+                                        <input type="number" id="heading-size" class="form-control form-control-glass" value="12" min="8" max="24">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Heading Style</label>
+                                        <select id="heading-style" class="form-select form-select-glass">
+                                            <option value="none" selected>Plain Text</option>
+                                            <option value="underline">Underlined</option>
+                                            <option value="filled">Filled (Colored Background)</option>
+                                            <option value="box">Boxed</option>
+                                            <option value="rounded">Rounded Box</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <label class="form-label-custom">Heading Text Color</label>
+                                        <input type="color" id="heading-color" class="form-control form-control-glass form-control-color w-100" value="#1e3a8a">
+                                    </div>
+                                    <div class="col-6 heading-decor-configs" style="display:none;">
+                                        <label class="form-label-custom">Background Color</label>
+                                        <input type="color" id="heading-bg" class="form-control form-control-glass form-control-color w-100" value="#eff6ff">
+                                    </div>
+                                    <div class="col-6 heading-decor-configs" style="display:none;">
+                                        <label class="form-label-custom">Border/Line Color</label>
+                                        <input type="color" id="heading-border" class="form-control form-control-glass form-control-color w-100" value="#3b82f6">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Headers, Footers & Watermarks -->
+                    <div class="accordion-item accordion-item-glass">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button accordion-button-glass collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-decor">
+                                <i class="bi bi-layout-wtf me-2"></i> Header, Footer & Watermark
+                            </button>
+                        </h2>
+                        <div id="collapse-decor" class="accordion-collapse collapse" data-bs-parent="#settings-accordion">
+                            <div class="accordion-body accordion-body-glass">
+                                <div class="row g-2">
+                                    <div class="col-12">
+                                        <label class="form-label-custom">Header Text</label>
+                                        <input type="text" id="header-text" class="form-control form-control-glass" value="Micro Copy Study Series" placeholder="Leave blank to disable">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Author Name</label>
+                                        <input type="text" id="author-name" class="form-control form-control-glass" value="A. Student">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Date</label>
+                                        <input type="text" id="date-str" class="form-control form-control-glass" value="2026-07">
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <label class="form-label-custom">Footer Text</label>
+                                        <input type="text" id="footer-text" class="form-control form-control-glass" value="Confidential Study Material" placeholder="Leave blank to disable">
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input form-check-input-custom" type="checkbox" id="show-page-numbers" checked>
+                                            <label class="form-check-label text-white-50" style="font-size: 0.8rem;" for="show-page-numbers">Print Page Numbers (Page X of Y)</label>
+                                        </div>
+                                    </div>
+                                    <hr class="border-glass my-2">
+                                    <div class="col-12">
+                                        <label class="form-label-custom">Watermark Text</label>
+                                        <input type="text" id="watermark-text" class="form-control form-control-glass" value="DO NOT COPY" placeholder="Leave blank to disable">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Watermark Opacity</label>
+                                        <input type="range" id="watermark-opacity" class="form-range" value="0.1" min="0.05" max="0.5" step="0.05">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label-custom">Rotation Angle (°)</label>
+                                        <input type="number" id="watermark-angle" class="form-control form-control-glass" value="45" min="-90" max="90">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label-custom">Watermark Color</label>
+                                        <input type="color" id="watermark-color" class="form-control form-control-glass form-control-color w-100" value="#cccccc">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Import File -->
+                    <div class="accordion-item accordion-item-glass">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button accordion-button-glass collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-import">
+                                <i class="bi bi-file-earmark-arrow-up me-2"></i> Import Document (.TXT / .DOCX)
+                            </button>
+                        </h2>
+                        <div id="collapse-import" class="accordion-collapse collapse" data-bs-parent="#settings-accordion">
+                            <div class="accordion-body accordion-body-glass">
+                                <form id="form-upload-file">
+                                    <label class="form-label-custom">Select File</label>
+                                    <input type="file" id="upload-file-input" class="form-control form-control-glass mb-2" accept=".txt,.docx">
+                                    <button type="submit" class="btn btn-premium btn-sm w-100">
+                                        <i class="bi bi-upload me-1"></i> Parse & Load into Editor
+                                    </button>
+                                </form>
+                                <div id="upload-file-status" class="mt-2 small text-info" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Custom Font Upload -->
+                    <div class="accordion-item accordion-item-glass">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button accordion-button-glass collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-fonts">
+                                <i class="bi bi-cloud-upload me-2"></i> Upload Custom Font
+                            </button>
+                        </h2>
+                        <div id="collapse-fonts" class="accordion-collapse collapse" data-bs-parent="#settings-accordion">
+                            <div class="accordion-body accordion-body-glass">
+                                <form id="form-upload-font" enctype="multipart/form-data">
+                                    <div class="mb-2">
+                                        <label class="form-label-custom">Font Name</label>
+                                        <input type="text" id="upload-font-name" class="form-control form-control-glass" placeholder="e.g. My Handwriting" required>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label-custom">TrueType File (.ttf)</label>
+                                        <input type="file" id="upload-font-file" class="form-control form-control-glass" accept=".ttf" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-premium btn-sm w-100">
+                                        <i class="bi bi-cloud-plus me-1"></i> Register Font
+                                    </button>
+                                </form>
+                                <div id="upload-font-status" class="mt-2 small text-info" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div> <!-- End Accordion -->
+            </div>
+        </aside>
+
+        <!-- Workspace (Split View) -->
+        <main class="workspace">
+            
+            <!-- Left Pane: Rich Text Editor -->
+            <section class="editor-pane">
+                <div class="pane-header">
+                    <span class="pane-title"><i class="bi bi-pencil-square text-indigo"></i> Document Editor</span>
+                    <span class="small text-muted font-monospace" style="font-size: 0.75rem;">Interactive Quill 2.0</span>
+                </div>
+                <div class="editor-container">
+                    <div id="editor-toolbar">
+                        <!-- Custom toolbar layout for Quill -->
+                        <span class="ql-formats">
+                            <select class="ql-header">
+                                <option selected>Normal</option>
+                                <option value="1">Heading 1</option>
+                                <option value="2">Heading 2</option>
+                                <option value="3">Heading 3</option>
+                            </select>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-bold" title="Bold"></button>
+                            <button class="ql-italic" title="Italic"></button>
+                            <button class="ql-underline" title="Underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <select class="ql-color" title="Text Color"></select>
+                            <select class="ql-background" title="Highlight Marker"></select>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-list" value="ordered" title="Ordered List"></button>
+                            <button class="ql-list" value="bullet" title="Bullet List"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-table" title="Insert Table"><i class="bi bi-table"></i></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-clean" title="Clear Formatting"></button>
+                        </span>
+                    </div>
+                    <div id="editor">
+                        <h1>Classical Mechanics: Essential Review</h1>
+                        <p>Classical mechanics is a physical theory describing the <strong>motion of macroscopic objects</strong>, from projectiles to machinery, and astronomical objects, such as spacecraft, planets, stars, and galaxies. It is one of the oldest and largest subjects in science.</p>
+                        
+                        <h2>1. Newton's Laws of Motion</h2>
+                        <p>Newton's laws of motion are three physical laws that, together, laid the foundation for classical mechanics. They describe the relationship between a body and the forces acting upon it, and its motion in response to those forces.</p>
+                        <ul>
+                            <li><strong>First Law (Inertia):</strong> An object at rest remains at rest, and an object in motion remains in motion at constant speed and in a straight line, unless acted on by an force.</li>
+                            <li><strong>Second Law (F=ma):</strong> The acceleration of an object is dependent upon two variables - the net force acting upon the object and the mass: <em>F = ma</em>.</li>
+                            <li><strong>Third Law:</strong> For every action, there is an equal and opposite reaction.</li>
+                        </ul>
+                        
+                        <h2>2. Kinematics Formulas</h2>
+                        <p>Standard kinematics formulas for uniform acceleration:</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Equation</th>
+                                    <th>Variables Involved</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>v = u + at</td>
+                                    <td>Velocity, Initial Velocity, Acceleration, Time</td>
+                                </tr>
+                                <tr>
+                                    <td>s = ut + ½at²</td>
+                                    <td>Displacement, Initial Velocity, Time, Acceleration</td>
+                                </tr>
+                                <tr>
+                                    <td>v² = u² + 2as</td>
+                                    <td>Velocity, Initial Velocity, Acceleration, Displacement</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <h2>3. Highlights & Key Topics</h2>
+                        <p>Keep these critical elements in mind when reviewing orbital trajectories:</p>
+                        <ul>
+                            <li><span style="background-color: rgb(255, 255, 0);">Escape Velocity</span> is the minimum speed needed for a free, non-propelled object to escape from the gravitational influence of a primary body.</li>
+                            <li><span style="background-color: rgb(0, 255, 0);">Kepler's Laws</span> describe the motion of planets around the Sun in ellipses, equal areas in equal times, and proportional periods.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Right Pane: Live PDF Preview -->
+            <section class="preview-pane">
+                <div class="pane-header">
+                    <span class="pane-title"><i class="bi bi-eye-fill text-indigo"></i> Live Preview</span>
+                    <span class="badge bg-dark font-monospace text-success" style="font-size: 0.75rem;">Print-Ready (300 DPI)</span>
+                </div>
+                <div class="preview-container">
+                    <div class="preview-loading" id="preview-loader">
+                        <div class="spinner-glow mb-3"></div>
+                        <h5 class="text-white">Generating PDF...</h5>
+                        <p class="text-white-50 small">Applying multi-column layout rules</p>
+                    </div>
+                    <iframe id="preview-iframe" class="preview-iframe"></iframe>
+                </div>
+            </section>
+            
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Quill.js 2.0 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+    
+    <script>
+        let quill;
+        let activeProjectId = null;
+        let updateTimeout = null;
+
+        // CSRF Token Helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Gather all settings from the sidebar form
+        function getSettings() {
+            return {
+                project_name: document.getElementById('project-name-input').value,
+                paper_size: document.getElementById('paper-size').value,
+                orientation: document.getElementById('orientation').value,
+                columns: document.getElementById('columns-count').value,
+                column_spacing: document.getElementById('column-spacing').value,
+                margin_top: document.getElementById('margin-top').value,
+                margin_bottom: document.getElementById('margin-bottom').value,
+                margin_left: document.getElementById('margin-left').value,
+                margin_right: document.getElementById('margin-right').value,
+                show_page_border: document.getElementById('show-page-border').checked,
+                page_border_color: document.getElementById('page-border-color').value,
+                
+                font_family: document.getElementById('font-family').value,
+                font_size: document.getElementById('font-size').value,
+                line_height: document.getElementById('line-height').value,
+                paragraph_spacing: document.getElementById('paragraph-spacing').value,
+                text_align: document.getElementById('text-align').value,
+                text_color: document.getElementById('text-color').value,
+                bg_color: document.getElementById('bg-color').value,
+                
+                heading_font: document.getElementById('heading-font').value,
+                heading_size: document.getElementById('heading-size').value,
+                heading_style: document.getElementById('heading-style').value,
+                heading_color: document.getElementById('heading-color').value,
+                heading_bg: document.getElementById('heading-bg').value,
+                heading_border: document.getElementById('heading-border').value,
+                
+                header_text: document.getElementById('header-text').value,
+                footer_text: document.getElementById('footer-text').value,
+                show_page_numbers: document.getElementById('show-page-numbers').checked,
+                watermark_text: document.getElementById('watermark-text').value,
+                watermark_opacity: document.getElementById('watermark-opacity').value,
+                watermark_angle: document.getElementById('watermark-angle').value,
+                watermark_color: document.getElementById('watermark-color').value,
+                author_name: document.getElementById('author-name').value,
+                date_str: document.getElementById('date-str').value
+            };
+        }
+
+        // Apply settings back to the form (when loading a saved project)
+        function applySettings(settings) {
+            if (!settings) return;
+            
+            const mappings = {
+                'paper-size': 'paper_size',
+                'orientation': 'orientation',
+                'columns-count': 'columns',
+                'column-spacing': 'column_spacing',
+                'margin-top': 'margin_top',
+                'margin-bottom': 'margin_bottom',
+                'margin-left': 'margin_left',
+                'margin-right': 'margin_right',
+                'show-page-border': 'show_page_border',
+                'page-border-color': 'page_border_color',
+                'font-family': 'font_family',
+                'font-size': 'font_size',
+                'line-height': 'line_height',
+                'paragraph-spacing': 'paragraph_spacing',
+                'text-align': 'text_align',
+                'text-color': 'text_color',
+                'bg-color': 'bg_color',
+                'heading-font': 'heading_font',
+                'heading-size': 'heading_size',
+                'heading-style': 'heading_style',
+                'heading-color': 'heading_color',
+                'heading-bg': 'heading_bg',
+                'heading-border': 'heading_border',
+                'header-text': 'header_text',
+                'footer-text': 'footer_text',
+                'show-page-numbers': 'show_page_numbers',
+                'watermark-text': 'watermark_text',
+                'watermark-opacity': 'watermark_opacity',
+                'watermark-angle': 'watermark_angle',
+                'watermark-color': 'watermark_color',
+                'author-name': 'author_name',
+                'date-str': 'date_str'
+            };
+
+            for (const [elementId, settingKey] of Object.entries(mappings)) {
+                const el = document.getElementById(elementId);
+                if (el && settings[settingKey] !== undefined) {
+                    if (el.type === 'checkbox') {
+                        el.checked = settings[settingKey];
+                    } else {
+                        el.value = settings[settingKey];
+                    }
+                    // Trigger custom events to adjust visibility
+                    el.dispatchEvent(new Event('change'));
+                }
+            }
+        }
+
+        // Trigger dynamic PDF preview build via post request
+        function updatePreview() {
+            const loader = document.getElementById('preview-loader');
+            loader.classList.add('active');
+
+            const payload = {
+                html_content: quill.root.innerHTML,
+                settings: getSettings()
+            };
+
+            fetch('/generate-pdf/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('PDF Generation Failed');
+                return response.blob();
+            })
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                const iframe = document.getElementById('preview-iframe');
+                
+                // Revoke old blob to prevent memory leaks
+                if (iframe.src && iframe.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(iframe.src);
+                }
+                iframe.src = url;
+                loader.classList.remove('active');
+            })
+            .catch(err => {
+                console.error(err);
+                loader.classList.remove('active');
+                alert('Failed to update PDF preview: ' + err.message);
+            });
+        }
+
+        // Debounce updating for real-time form inputs
+        function schedulePreviewUpdate() {
+            clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(updatePreview, 650); // 650ms debounce
+        }
+
+        // Document Initializer
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Initialize Quill 2.0 Editor
+            quill = new Quill('#editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: '#editor-toolbar'
+                }
+            });
+
+            // Handle custom table insertion in Quill
+            const tableButton = document.querySelector('.ql-table');
+            if (tableButton) {
+                tableButton.addEventListener('click', function() {
+                    const tooltip = quill.theme.tooltip;
+                    const rows = parseInt(prompt("Enter number of rows:", "3")) || 0;
+                    const cols = parseInt(prompt("Enter number of columns:", "2")) || 0;
+                    if (rows > 0 && cols > 0) {
+                        let tableHtml = '<table border="1" style="width: 100%;"><thead><tr>';
+                        for (let c = 0; c < cols; c++) {
+                            tableHtml += '<th>Header</th>';
+                        }
+                        tableHtml += '</tr></thead><tbody>';
+                        for (let r = 0; r < rows - 1; r++) {
+                            tableHtml += '<tr>';
+                            for (let c = 0; c < cols; c++) {
+                                tableHtml += '<td>Data</td>';
+                            }
+                            tableHtml += '</tr>';
+                        }
+                        tableHtml += '</tbody></table><p><br></p>';
+                        
+                        const range = quill.getSelection(true);
+                        quill.clipboard.dangerouslyPasteHTML(range.index, tableHtml);
+                    }
+                });
+            }
+
+            // Hook change events to form elements to auto-update
+            const inputs = document.querySelectorAll('.sidebar input, .sidebar select, .sidebar textarea');
+            inputs.forEach(input => {
+                if (input.id !== 'project-name-input' && input.id !== 'upload-file-input' && input.id !== 'upload-font-file' && input.id !== 'upload-font-name') {
+                    input.addEventListener('change', schedulePreviewUpdate);
+                    if (input.type === 'range' || input.type === 'number' || input.type === 'text') {
+                        input.addEventListener('input', schedulePreviewUpdate);
+                    }
+                }
+            });
+
+            // Adjust form field dependencies dynamically
+            const showBorderSwitch = document.getElementById('show-page-border');
+            showBorderSwitch.addEventListener('change', function() {
+                document.getElementById('page-border-color-wrapper').style.display = this.checked ? 'block' : 'none';
+            });
+
+            const headingStyleSelect = document.getElementById('heading-style');
+            headingStyleSelect.addEventListener('change', function() {
+                const isDecorated = ['rounded', 'box', 'filled', 'underline'].includes(this.value);
+                document.querySelectorAll('.heading-decor-configs').forEach(el => {
+                    el.style.display = isDecorated ? 'block' : 'none';
+                });
+            });
+
+            // Force update buttons
+            document.getElementById('btn-update-preview').addEventListener('click', updatePreview);
+            
+            // PDF Download Action
+            document.getElementById('btn-download-pdf').addEventListener('click', function() {
+                const settings = getSettings();
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/generate-pdf/?download=true';
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = getCookie('csrftoken');
+                form.appendChild(csrfInput);
+
+                const htmlInput = document.createElement('input');
+                htmlInput.type = 'hidden';
+                htmlInput.name = 'html_content';
+                htmlInput.value = quill.root.innerHTML;
+                form.appendChild(htmlInput);
+
+                const settingsInput = document.createElement('input');
+                settingsInput.type = 'hidden';
+                settingsInput.name = 'settings';
+                settingsInput.value = JSON.stringify(settings);
+                form.appendChild(settingsInput);
+
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+            });
+
+            // Handle Import Files (.TXT/.DOCX)
+            const uploadForm = document.getElementById('form-upload-file');
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fileInput = document.getElementById('upload-file-input');
+                const statusDiv = document.getElementById('upload-file-status');
+                
+                if (!fileInput.files.length) {
+                    alert('Please select a file to import.');
+                    return;
+                }
+
+                statusDiv.innerText = 'Parsing document...';
+                statusDiv.style.display = 'block';
+
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                fetch('/upload-file/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        quill.root.innerHTML = data.html;
+                        statusDiv.innerText = 'Document loaded successfully!';
+                        updatePreview();
+                    } else {
+                        statusDiv.innerText = 'Error: ' + data.message;
+                    }
+                })
+                .catch(err => {
+                    statusDiv.innerText = 'Upload failed: ' + err.message;
+                });
+            });
+
+            // Handle Custom Font Uploads
+            const fontForm = document.getElementById('form-upload-font');
+            fontForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fontName = document.getElementById('upload-font-name').value;
+                const fontFile = document.getElementById('upload-font-file').files[0];
+                const statusDiv = document.getElementById('upload-font-status');
+
+                statusDiv.innerText = 'Registering font...';
+                statusDiv.style.display = 'block';
+
+                const formData = new FormData();
+                formData.append('ttf_file', fontFile);
+                formData.append('font_name', fontName);
+
+                fetch('/upload-font/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        statusDiv.innerText = data.message;
+                        // Add font to dropdowns
+                        const fontOptGroup = document.getElementById('optgroup-custom-fonts');
+                        const newOption = new Option(data.font_name, data.font_name);
+                        fontOptGroup.appendChild(newOption);
+                        
+                        // Select it immediately
+                        document.getElementById('font-family').value = data.font_name;
+                        
+                        fontForm.reset();
+                        updatePreview();
+                    } else {
+                        statusDiv.innerText = 'Error: ' + data.message;
+                    }
+                })
+                .catch(err => {
+                    statusDiv.innerText = 'Registration failed: ' + err.message;
+                });
+            });
+
+            // Handle Saved Projects Loader
+            const projectSelect = document.getElementById('select-project');
+            projectSelect.addEventListener('change', function() {
+                if (!this.value) return;
+                
+                fetch(`/projects/${this.value}/`)
+                .then(response => response.json())
+                .then(project => {
+                    activeProjectId = project.id;
+                    document.getElementById('active-project-name').innerText = project.name;
+                    document.getElementById('project-name-input').value = project.name;
+                    quill.root.innerHTML = project.html_content;
+                    applySettings(project.settings);
+                    
+                    document.getElementById('btn-delete-project').removeAttribute('disabled');
+                    updatePreview();
+                })
+                .catch(err => alert('Failed to load project: ' + err.message));
+            });
+
+            // Save/Update Project Action
+            document.getElementById('btn-save-project').addEventListener('click', function() {
+                const name = document.getElementById('project-name-input').value.trim() || 'Untitled Project';
+                const payload = {
+                    name: name,
+                    html_content: quill.root.innerHTML,
+                    settings: getSettings()
+                };
+
+                const url = activeProjectId ? `/projects/${activeProjectId}/` : '/projects/';
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
+                        if (!activeProjectId) {
+                            activeProjectId = data.id;
+                            // Add to list and select
+                            const newOption = new Option(`${data.name} (Just now)`, data.id);
+                            projectSelect.add(newOption);
+                            projectSelect.value = data.id;
+                        } else {
+                            // Update option text
+                            const opt = projectSelect.querySelector(`option[value="${activeProjectId}"]`);
+                            if (opt) opt.text = `${data.name} (Updated)`;
+                        }
+                        document.getElementById('active-project-name').innerText = data.name;
+                        document.getElementById('btn-delete-project').removeAttribute('disabled');
+                    } else {
+                        alert('Error saving project: ' + data.message);
+                    }
+                })
+                .catch(err => alert('Save failed: ' + err.message));
+            });
+
+            // Delete Project Action
+            document.getElementById('btn-delete-project').addEventListener('click', function() {
+                if (!activeProjectId) return;
+                if (!confirm('Are you sure you want to delete this project?')) return;
+
+                fetch(`/projects/${activeProjectId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
+                        
+                        // Remove option
+                        const opt = projectSelect.querySelector(`option[value="${activeProjectId}"]`);
+                        if (opt) opt.remove();
+                        
+                        // Reset
+                        activeProjectId = null;
+                        projectSelect.value = "";
+                        document.getElementById('active-project-name').innerText = "New Project";
+                        document.getElementById('project-name-input').value = "My Study Notes";
+                        this.setAttribute('disabled', 'true');
+                        updatePreview();
+                    } else {
+                        alert('Delete failed: ' + data.message);
+                    }
+                })
+                .catch(err => alert('Delete failed: ' + err.message));
+            });
+
+            // Trigger Initial Preview compilation
+            setTimeout(updatePreview, 500);
+        });
+    </script>
+</body>
+</html>
