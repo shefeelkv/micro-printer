@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 FONTS_DIR = os.path.join(settings.MEDIA_ROOT, 'fonts')
 os.makedirs(FONTS_DIR, exist_ok=True)
 
-# Google Fonts repository URLs
+# CRITICAL: Google Fonts repository URLs used for downloading and registering required fallback/standard fonts.
 GOOGLE_FONTS_MAP = {
     'Roboto': {
         'normal': 'https://github.com/google/fonts/raw/main/ofl/roboto/static/Roboto-Regular.ttf',
@@ -252,7 +252,7 @@ def register_font_family(family_name):
 
 
 
-# Fallback font families list
+# CRITICAL: Fallback font families list for language support and text segmentation.
 FALLBACK_FONTS = [
     'Noto Sans Malayalam',
     'Noto Sans Devanagari',
@@ -322,6 +322,15 @@ def font_supports_char(font_family_name, char):
 
 def get_font_for_char(char, primary_font, current_run_font=None):
     """Resolves the best font family that supports the given character."""
+    # CRITICAL: Explicitly check for Malayalam Unicode characters (U+0D00 to U+0D7F)
+    # and map them directly to a Malayalam font to avoid fallback/shaping issues.
+    if 0x0D00 <= ord(char) <= 0x0D7F:
+        if primary_font in ['Noto Sans Malayalam', 'Meera', 'Manjari', 'Chilanka']:
+            return primary_font
+        if current_run_font in ['Noto Sans Malayalam', 'Meera', 'Manjari', 'Chilanka']:
+            return current_run_font
+        return 'Noto Sans Malayalam'
+
     # Spaces and common punctuation can inherit current run font to prevent text splitting
     is_neutral = char.isspace() or char in ".,;:!?()[]{}-_+=*/\\|'\"`@#$%-^&~<>\xa0"
     

@@ -215,13 +215,29 @@ def generate_pdf_reportlab(html_content, pdf_settings, output_stream):
     
     doc.build(story, canvasmaker=ConfiguredNumberedCanvas)
 
+def get_file_url(path):
+    """
+    CRITICAL: Formats a local system path as a valid file:/// URL,
+    ensuring that spaces and special characters are correctly URL-encoded for headless Chrome.
+    """
+    import urllib.request
+    url_path = urllib.request.pathname2url(os.path.abspath(path))
+    if url_path.startswith('///'):
+        return f"file:{url_path}"
+    elif url_path.startswith('//'):
+        return f"file:{url_path}"
+    elif url_path.startswith('/'):
+        return f"file://{url_path}"
+    else:
+        return f"file:///{url_path}"
+
 def generate_pdf(html_content, pdf_settings, output_stream):
     """
     Renders HTML content to PDF.
     Attempts to use headless Chrome first, falling back to ReportLab
     if Chrome is not installed or when running in a serverless environment (e.g. Vercel).
     """
-    # Pre-register/download fallback fonts to media/fonts/ cached directory
+    # CRITICAL: Pre-register/download fallback fonts to media/fonts/ cached directory
     prepare_fallback_fonts()
 
     # Determine if we should use ReportLab fallback (e.g. if Vercel or Chrome not found)
@@ -299,6 +315,7 @@ def generate_pdf(html_content, pdf_settings, output_stream):
     show_page_numbers = pdf_settings.get('show_page_numbers', True)
     
     # 2. Build local font @font-face rules
+    # CRITICAL: All local font URLs are formatted using get_file_url to escape spaces.
     font_faces = []
     from .font_manager import GOOGLE_FONTS_MAP, FONTS_DIR
     from projects.models import CustomFont
@@ -308,7 +325,7 @@ def generate_pdf(html_content, pdf_settings, output_stream):
         for variant, url in variants.items():
             ext = os.path.splitext(url.split('?')[0])[1] or '.ttf'
             filename = f"{fam.replace(' ', '')}-{variant}{ext}"
-            font_path = os.path.join(FONTS_DIR, filename).replace('\\', '/')
+            font_path = os.path.join(FONTS_DIR, filename)
             if os.path.exists(font_path):
                 # Map regular, bold, italic
                 weight = 'bold' if 'bold' in variant.lower() else 'normal'
@@ -318,19 +335,19 @@ def generate_pdf(html_content, pdf_settings, output_stream):
                     font-family: '{fam}';
                     font-weight: {weight};
                     font-style: {style};
-                    src: url('file:///{font_path}');
+                    src: url('{get_file_url(font_path)}');
                 }}
                 """)
                 
     # Add Custom Uploaded Fonts
     for custom_font in CustomFont.objects.all():
         if custom_font.ttf_file:
-            font_path = custom_font.ttf_file.path.replace('\\', '/')
+            font_path = custom_font.ttf_file.path
             if os.path.exists(font_path):
                 font_faces.append(f"""
                 @font-face {{
                     font-family: '{custom_font.name}';
-                    src: url('file:///{font_path}');
+                    src: url('{get_file_url(font_path)}');
                 }}
                 """)
                 
