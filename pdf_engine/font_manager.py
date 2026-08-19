@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 FONTS_DIR = os.path.join(settings.MEDIA_ROOT, 'fonts')
 os.makedirs(FONTS_DIR, exist_ok=True)
 
+# CRITICAL: Packaged local fonts directory to avoid runtime downloads on Vercel production
+LOCAL_FONTS_DIR = os.path.join(os.path.dirname(__file__), 'fonts')
+
 # CRITICAL: Google Fonts repository URLs used for downloading and registering required fallback/standard fonts.
 GOOGLE_FONTS_MAP = {
     'Roboto': {
@@ -130,6 +133,11 @@ _REGISTERED_NORMAL_VARIANTS = {}
 
 def download_font_file(url, filename):
     """Downloads a font file from a URL and saves it to the cache directory."""
+    # CRITICAL: First check if the font exists in our packaged local fonts directory
+    local_path = os.path.join(LOCAL_FONTS_DIR, filename)
+    if os.path.exists(local_path):
+        return local_path
+
     dest_path = os.path.join(FONTS_DIR, filename)
     if os.path.exists(dest_path):
         return dest_path

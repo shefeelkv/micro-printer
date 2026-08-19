@@ -228,3 +228,47 @@ def docx_to_html(file_stream):
         html_elements.append("\n".join(table_html))
         
     return "\n".join(html_elements)
+
+def diagnostic_pdf_view(request):
+    """
+    Diagnostic endpoint that generates a small PDF containing Malayalam test cases,
+    using the production PDF engine.
+    """
+    html_content = """
+    <h1>Malayalam Test</h1>
+    <p>മലയാളം</p>
+    <p>മനഃപൂർവ്വം</p>
+    <p>ഇടയ്ക്കിടെ</p>
+    <p>എന്നാൽ</p>
+    <p>പറയേണ്ടതില്ല</p>
+    <p>എന്തുകൊണ്ടാണ്</p>
+    <p>പൂർണ്ണമായും</p>
+    <p>English + മലയാളം mixed text: This is a test of മലയാളം shaping.</p>
+    """
+    pdf_settings = {
+        'paper_size': 'A4',
+        'orientation': 'portrait',
+        'columns': 1,
+        'margin_top': 36,
+        'margin_bottom': 36,
+        'margin_left': 36,
+        'margin_right': 36,
+        'font_family': 'Manjari',
+        'font_size': 12,
+        'line_height': 1.4,
+        'text_color': '#000000',
+        'watermark_text': ''
+    }
+    try:
+        output_buffer = io.BytesIO()
+        generate_pdf(html_content, pdf_settings, output_buffer)
+        pdf_data = output_buffer.getvalue()
+        output_buffer.close()
+        
+        response = HttpResponse(pdf_data, content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; filename="diagnostic.pdf"'
+        return response
+    except Exception as e:
+        logger.exception("Diagnostic PDF generation error")
+        return HttpResponse(f"Diagnostic PDF generation failed: {str(e)}", status=500)
+

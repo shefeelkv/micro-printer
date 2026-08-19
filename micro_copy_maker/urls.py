@@ -13,6 +13,7 @@ urlpatterns = [
     path('', editor_views.index, name='index'),
     path('upload-file/', editor_views.upload_file, name='upload_file'),
     path('generate-pdf/', editor_views.generate_pdf_view, name='generate_pdf'),
+    path('diagnostic-pdf/', editor_views.diagnostic_pdf_view, name='diagnostic_pdf'),
     
     # Projects / templates API URL mappings
     path('projects/', projects_views.project_list_create, name='project_list_create'),

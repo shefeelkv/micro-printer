@@ -240,6 +240,44 @@ def generate_pdf(html_content, pdf_settings, output_stream):
     # CRITICAL: Pre-register/download fallback fonts to media/fonts/ cached directory
     prepare_fallback_fonts()
 
+    # Step 6: Diagnostic Logging for Production
+    try:
+        import platform
+        import reportlab
+        import logging
+        from reportlab.pdfbase import pdfmetrics
+        diag_logger = logging.getLogger(__name__)
+
+        m_font_name = 'Not Loaded'
+        m_font_path = 'unknown'
+        try:
+            m_font = pdfmetrics.getFont('Noto Sans Malayalam-normal')
+            m_font_name = m_font.fontName
+            m_font_path = getattr(m_font, 'filename', 'unknown')
+        except Exception:
+            pass
+
+        font_exists = os.path.exists(m_font_path) if m_font_path != 'unknown' else False
+        font_size_val = os.path.getsize(m_font_path) if font_exists else 0
+
+        try:
+            import uharfbuzz
+            hb_available = True
+        except ImportError:
+            hb_available = False
+
+        diag_logger.info("--- PRODUCTION DIAGNOSTIC ---")
+        diag_logger.info(f"REPORTLAB_VERSION={getattr(reportlab, 'Version', reportlab.__version__)}")
+        diag_logger.info(f"PYTHON_VERSION={platform.python_version()}")
+        diag_logger.info(f"MALAYALAM_FONT={m_font_name}")
+        diag_logger.info(f"FONT_PATH={m_font_path}")
+        diag_logger.info(f"FONT_EXISTS={font_exists}")
+        diag_logger.info(f"FONT_SIZE={font_size_val}")
+        diag_logger.info(f"HARFBUZZ_AVAILABLE={hb_available}")
+        diag_logger.info("-----------------------------")
+    except Exception as diag_err:
+        logging.getLogger(__name__).error(f"Error printing diagnostics: {diag_err}")
+
     # Determine if we should use ReportLab fallback (e.g. if Vercel or Chrome not found)
     use_reportlab = False
     chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
@@ -325,7 +363,11 @@ def generate_pdf(html_content, pdf_settings, output_stream):
         for variant, url in variants.items():
             ext = os.path.splitext(url.split('?')[0])[1] or '.ttf'
             filename = f"{fam.replace(' ', '')}-{variant}{ext}"
-            font_path = os.path.join(FONTS_DIR, filename)
+            # Check local packaged fonts first
+            font_path = os.path.join(os.path.dirname(__file__), 'fonts', filename)
+            if not os.path.exists(font_path):
+                # Fallback to dynamic media cache directory
+                font_path = os.path.join(FONTS_DIR, filename)
             if os.path.exists(font_path):
                 # Map regular, bold, italic
                 weight = 'bold' if 'bold' in variant.lower() else 'normal'

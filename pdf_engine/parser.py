@@ -191,6 +191,8 @@ class HTMLToFlowablesParser:
             textColor=text_color,
             alignment=alignment,
             spaceAfter=paragraph_spacing,
+            # CRITICAL: Enable text shaping for complex script support (Malayalam, etc.) via uharfbuzz
+            shaping=True,
             # ReportLab doesn't support wordSpacing or letterSpacing directly in ParagraphStyle attributes
             # but we can apply spacing inside text if needed, or rely on standard layout.
         )
@@ -273,6 +275,7 @@ class HTMLToFlowablesParser:
             textColor=self.heading_color,
             alignment=TA_LEFT,
             spaceAfter=4,
+            shaping=True,
         )
 
         p = Paragraph(heading_text, heading_p_style)
